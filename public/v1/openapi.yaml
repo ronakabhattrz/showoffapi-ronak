@@ -13,6 +13,8 @@ servers:
     description: Local development server
   - url: 'https://showoffapi-ronak.herokuapp.com/api/v1'
     description: Heroku server
+  - url: 'https://showoffapi-ronak.herokuapp.com/api/v1'
+    description: Heroku server 2
 
 tags:
   - name: Authentication

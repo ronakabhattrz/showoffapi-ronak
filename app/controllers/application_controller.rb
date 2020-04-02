@@ -1,6 +1,6 @@
 class ApplicationController < ActionController::API
  before_action :throttle_token
- before_action :authenticate_request
+ before_action :authenticate_request 
 
   protected
 
