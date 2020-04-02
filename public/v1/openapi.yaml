@@ -11,7 +11,7 @@ info:
 servers:
   - url: 'http://localhost:3000/api/v1'
     description: Local development server
-  - url: 'https://showoffapi.herokuapp.com//api/v1'
+  - url: 'https://showoffapi-ronak.herokuapp.com/api/v1'
     description: Heroku server
 
 tags:
