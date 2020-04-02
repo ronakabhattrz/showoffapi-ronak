@@ -1,0 +1,17 @@
+development:
+  adapter: postgresql
+  encoding: unicode
+  database: api_ronak
+  host: localhost
+  pool: 5
+  username: ronakabhattrz
+  password: ronakabhattrz
+
+production:
+  adapter: postgresql
+  encoding: unicode
+  database: api_ronak
+  host: localhost
+  pool: 5
+  username: ronakabhattrz
+  password: ronakabhattrz

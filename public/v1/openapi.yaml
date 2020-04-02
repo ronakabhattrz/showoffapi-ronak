@@ -1,0 +1,1148 @@
+openapi: 3.0.0
+
+info:
+  title: RONAK API
+  version: 1.0.0
+  description: RONAK BHATT TEST.
+  contact:
+    name: Ronak Bhatt
+    email: ronakabhattrz@gmail.com
+
+servers:
+  - url: 'http://localhost:3000/api/v1'
+    description: Local development server
+  - url: 'https://showoffapi.herokuapp.com//api/v1'
+    description: Heroku server
+
+tags:
+  - name: Authentication
+    description: Authentication Management
+  - name: Users
+    description: Users Management
+
+paths:
+  
+  # Oauth Management
+  /authenticate:
+    post:
+      operationId: oauth-authenticate
+      tags:
+        - Authentication
+      summary: Perform and get an access token on success.
+      description: Perform and get an access token on success. This method can only be done by the authorized clients of RONAK API.
+      security:
+        - AuthorizedClientBearerAuth: []
+      requestBody:
+        $ref: '#/components/requestBodies/OauthAuthorizeBody'
+      responses:
+        '200':
+          $ref: "#/components/responses/SuccessfulOauthAuthorize"
+        '400':
+          $ref: '#/components/responses/OauthBadRequestResponse'
+        '401':
+          $ref: "#/components/responses/ClientNotLoggedIn"
+        default:
+          $ref: "#/components/responses/BadRequest"
+
+  # /oauth/token:
+  #   post:
+  #     operationId: oauth-token
+  #     tags:
+  #       - Authentication
+  #     summary: Perform and get an access token on success.
+  #     description: Perform and get an access token on success. This method can only be done by the authorized clients of RONAK API.
+  #     security:
+  #       - AuthorizedClientBearerAuth: []
+  #     requestBody:
+  #       $ref: '#/components/requestBodies/OauthTokenBody'
+  #     responses:
+  #       '200':
+  #         $ref: "#/components/responses/SuccessfulLoginPost"
+  #       '400':
+  #         $ref: '#/components/responses/OauthBadRequestResponse'
+  #       '401':
+  #         $ref: "#/components/responses/OauthUnauthorizedResponse"
+  #       default:
+  #         $ref: "#/components/responses/BadRequest"
+  # /oauth/revoke:
+  #   post:
+  #     operationId: oauth-revoke
+  #     tags:
+  #       - Authentication
+  #     summary: User Logout
+  #     description: Perform and get an access token on success. This method can only be done by the authorized clients of RONAK API.
+  #     security:
+  #       - AuthorizedClientBearerAuth: []
+  #     requestBody:
+  #       $ref: '#/components/requestBodies/OauthRevokeBody'
+  #     responses:
+  #       '200':
+  #         $ref: "#/components/responses/SuccessfulLogout"
+  #       '401':
+  #         $ref: "#/components/responses/LogoutUnauthorizedResponse"
+  #       default:
+  #         $ref: "#/components/responses/BadRequest"
+
+  # User Management
+  /users:
+    post:
+      operationId: create-user
+      tags:
+        - Users
+      summary: Create User
+      description: This can only be any one.
+      security:
+        - LoginBearerAuth: []
+      requestBody:
+        $ref: '#/components/requestBodies/CreateUser'
+      responses:
+        '200':
+          $ref: "#/components/responses/SuccessfulOauthAuthorize"
+        '400':
+          $ref: '#/components/responses/OauthBadRequestResponse'
+        '401':
+          $ref: "#/components/responses/ClientNotLoggedIn"
+        default:
+          $ref: "#/components/responses/BadRequest"
+  /users/:id:
+    patch:
+      operationId: update-user
+      tags:
+        - Users
+      summary: Update User
+      security:
+        - bearerAuth: [] 
+      description: This can only be done by the logged in user.
+      requestBody:
+        $ref: '#/components/requestBodies/UpdateUser'
+      responses:
+        '200':
+          $ref: "#/components/responses/SuccessfulOauthAuthorize"
+        '400':
+          $ref: '#/components/responses/OauthBadRequestResponse'
+        '401':
+          $ref: "#/components/responses/ClientNotLoggedIn"
+        default:
+          $ref: "#/components/responses/BadRequest"
+
+components:
+  securitySchemes:
+    bearerAuth:            
+      type: http
+      scheme: bearer
+      bearerFormat: JWT   
+  schemas:
+    User:
+      description: User
+      type: object
+      properties:
+        id:
+          type: integer
+          example: 1
+          description: Id of the user
+        email:
+          type: string
+          example: "ronakabhattrz@gmail.com"
+          description: email of user
+        password:
+          type: string
+          example: "12345678"
+          description: password of user
+        password_confirmation:
+          type: string
+          default: "12345678"
+          description: password_confirmation of user
+    Response:
+      description: Response
+      required:
+      - status
+      properties:
+        status:
+          type: string
+          enum:
+          - Success
+          - Error
+          - Warning
+          example: Success
+    ResponseAccesstoken:
+      description: Response With Access Token
+      allOf:
+      - required:
+        - auth_token
+        - token_type
+        - expires_in
+        - created_at
+        properties:
+          auth_token:
+            type: string
+            example: eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzUxMiJ
+            description: Access Token for authentication
+          token_type:
+            type: string
+            example: 'bearer'
+            description: Token type for authentication
+          expires_in:
+            type: integer
+            example: 7200
+            description: Expiring time in seconds
+          created_at:
+            type: integer
+            example: 1535450084
+          first_login:
+            type: boolean
+            example: true
+    ResponseWithId:
+      description: Response With Id
+      allOf:
+      - $ref: '#/components/schemas/ResponseWithMessage'
+      - required:
+        - id
+        properties:
+          id:
+            type: integer
+            example: 1
+    ResponseWithMessage:
+      description: Response With Message
+      allOf:
+      - $ref: '#/components/schemas/Response'
+      - required:
+        - message
+        properties:
+          message:
+            type: string
+            example: Record {Operation} Successfully
+    ResponseWithRecord:
+      description: Response With Record
+      allOf:
+      - $ref: '#/components/schemas/ResponseWithMessage'
+      - required:
+        - record
+        properties:
+          record:
+            anyOf:
+              - $ref: "#/components/schemas/User"
+    ResponseWithoutId:
+      description: Response Without Id
+      allOf:
+      - $ref: '#/components/schemas/ResponseWithMessage'
+    RegisterSuccessResponse:
+      description: Register Response With Access Token
+      allOf:
+      - $ref: '#/components/schemas/Response'
+      - required:
+        - message
+        - id
+        - auth_token
+        - token_type
+        - expires_in
+        - created_at
+        properties:
+          status:
+            type: string
+            example: Success
+          message:
+            type: integer
+            example: "Welcome! You have signed up successfully."
+    SaveUserDeviseSuccessResponse:
+      description: User Devise Response With Access Token
+      properties:
+        data:
+          type: string
+          example: 1
+        message:
+          type: string
+          example: "Continue to this version"
+          description: message
+    SaveUserFeedbackSuccessResponse:
+      description: SaveUserDevise Response With Access Token
+      allOf:
+      - required:
+        - devise_id
+        - fcm_key
+        - os
+        - latitude
+        - longitude
+        - product
+        properties:
+          status:
+            type: string
+            example: "Success"
+          message:
+            type: string
+            example: Feedback Sent Successfully.
+    MosqueInfoPostResponse:
+      description: MosqueInfoPostResponse Response With Access Token
+      allOf:
+      - required:
+        - devise_id
+        - fcm_key
+        - os
+        - latitude
+        - longitude
+        - product
+        properties:
+          status:
+            type: string
+            example: "Success"
+          message:
+            type: string
+            example: Mosuqe Info save Successfully.
+    MosqueInfoUpdateResponse:
+      description: MosqueInfoUpdateResponse Response With Access Token
+      allOf:
+      - required:
+        - devise_id
+        - fcm_key
+        - os
+        - latitude
+        - longitude
+        - product
+        properties:
+          status:
+            type: string
+            example: "Success"
+          message:
+            type: string
+            example: Mosuqe Info Update Successfully.
+    Mosquewidget:
+      description: Mosquewidget Response With Access Token
+      allOf:
+        properties:
+          status:
+            type: string
+            example: "Success"
+    AppVesionSuccessResponse:
+      description: SaveUserDevise Response With Access Token
+      properties:
+        data:
+          type: string
+          example: 1
+        message:
+          type: string
+          example: "Continue to this version"
+          description: message
+    CombineSearchSuccessResponse:
+      description: Response With Access Token
+      allOf:
+      - required:
+        - action
+        - code
+        properties:
+          id:
+            type: string
+            example: 2
+          city_name:
+            type: string
+            example: Surat
+          state_id:
+            type: string
+            example: 3
+          state_name:
+            type: string
+            example: Gujarat
+          country_id:
+            type: string
+            example: 4
+          country_name:
+            type: string
+            example: India
+    CombineSearchNotes:
+      description: Response With Access Token
+      allOf:
+      - required:
+        - action
+        - code
+        properties:
+          note:
+            type: string
+            example: "TEST"
+    NoteSuccessResponse:
+      description: Response With Access Token
+      allOf:
+      - required:
+        - action
+        - code
+        properties:
+          status:
+            type: string
+            example: "sucess"
+          note:
+            type: string
+            example: "TEST"
+    AudiosSuccessResponse:
+      description: Response With Access Token
+      allOf:
+      - required:
+        - action
+        - code
+        properties:
+          status:
+            type: string
+            example: "sucess"
+          audios:
+            type: string
+            example: "audios list here..."
+    FavMosqueSuccessResponse:
+      description: Response With Access Token
+      allOf:
+      - required:
+        - action
+        - code
+        properties:
+          audios:
+            type: string
+            example: "Mosque added..."
+    BannerUrlsSuccessResponse:
+      description: Response With Access Token
+      allOf:
+      - required:
+        - action
+        - code
+        properties:
+          status:
+            type: string
+            example: "sucess"
+          banner_urls:
+            type: string
+            example: "banner_urls list here..."
+    InsertMosqueSuccessResponse:
+      description: Response With Access Token
+      allOf:
+      - required:
+        - action
+        - code
+        properties:
+          status:
+            type: string
+            example: "sucess"
+          banner_urls:
+            type: string
+            example: "Mosque Insert Successfull."
+    UpdateMosqueTimeSuccessResponse:
+      description: Response With Access Token
+      allOf:
+      - required:
+        - action
+        - code
+        properties:
+          mosque:
+            type: string
+            example: "Mosque Time Update Successfull."
+    IssueReportingSuccessResponse:
+      description: Response With Access Token
+      allOf:
+      - required:
+        - action
+        - code
+        properties:
+          mosque:
+            type: string
+            example: "Thanks for being part of salah near by family we will process sort on your Update location of Masjid"
+    BoardsSuccessResponse:
+      description: Response With Access Token
+      allOf:
+      - required:
+        - action
+        - code
+        properties:
+          status:
+            type: string
+            example: "sucess"
+          boards:
+            type: string
+            example: "boards list here..."
+    CountrySuccessResponse:
+      description: Response With Access Token
+      allOf:
+      - required:
+        - action
+        - code
+        properties:
+          id:
+            type: string
+            example: 1
+          name:
+            type: string
+            example: "TEST"
+    StateSuccessResponse:
+      description: Response With Access Token
+      allOf:
+      - required:
+        - action
+        - code
+        properties:
+          id:
+            type: string
+            example: 1
+          name:
+            type: string
+            example: "TEST"
+    CitySuccessResponse:
+      description: Response With Access Token
+      allOf:
+      - required:
+        - action
+        - code
+        properties:
+          id:
+            type: string
+            example: 1
+          name:
+            type: string
+            example: "TEST"
+    OauthBadRequest:
+      description: Response Oauth Bad Request
+      allOf:
+      - required:
+        - error
+        - error_description
+        properties:
+          error:
+            type: string
+            example: invalid_grant
+          error_description:
+            type: string
+            example: The provided authorization grant is invalid, expired, revoked, does not match the redirection URI used in the authorization request, or was issued to another client.
+    OauthUnauthorized:
+      description: Response Oauth Unauthorized
+      allOf:
+      - required:
+        - error
+        - error_description
+        properties:
+          error:
+            type: string
+            example: invalid_client
+          error_description:
+            type: string
+            example: Client authentication failed due to unknown client, no client authentication included, or unsupported authentication method.
+    OauthAuthorize:
+      description: Response With Access Token
+      allOf:
+      - required:
+        - action
+        - code
+        properties:
+          auth_token:
+            type: string
+            example: eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzUxMiJ
+            description: Code for authoriz
+  responses:
+    SuccessfulGet:
+      description: Record Created Successfully
+      content:
+        application/json:
+          schema:
+            allOf:
+            - $ref: '#/components/schemas/ResponseWithoutId'
+            - properties:
+                message:
+                  example: Record Created Successfully
+    SuccessfulPost:
+      description: Record Created Successfully
+      content:
+        application/json:
+          schema:
+            allOf:
+            - $ref: '#/components/schemas/ResponseWithId'
+            - properties:
+                message:
+                  example: Record Created Successfully
+    SuccessfulLoginPost:
+      description: Access Token Created Successfully
+      content:
+        application/json:
+          schema:
+            allOf:
+            - $ref: '#/components/schemas/ResponseAccesstoken'
+    SuccessfulRegisterPost:
+      description: User Created Successfully
+      content:
+        application/json:
+          schema:
+            allOf:
+            - $ref: '#/components/schemas/RegisterSuccessResponse'
+    SuccessfulPut:
+      description: Record Updated Successfully
+      content:
+        application/json:
+          schema:
+            allOf:
+            - $ref: '#/components/schemas/ResponseWithoutId'
+            - properties:
+                message:
+                  example: Record Updated Successfully
+    SuccessfulPutPassword:
+      description: Reset Password Successfully
+      content:
+        application/json:
+          schema:
+            allOf:
+            - $ref: '#/components/schemas/ResponseWithoutId'
+            - properties:
+                message:
+                  example: Reset Password Successfully
+    SuccessfulDelete:
+      description: Record Deleted Successfully
+      content:
+        application/json:
+          schema:
+            allOf:
+            - $ref: '#/components/schemas/ResponseWithMessage'
+            - properties:
+                message:
+                  example: Record Deleted Successfully
+    SuccessfulLogout:
+      description: Successfully Logout User
+      content:
+        application/json:
+          schema:
+            allOf:
+            - $ref: '#/components/schemas/ResponseWithoutId'
+            - properties:
+                message:
+                  example: Successfully Logout User
+    SuccessfulSaveUserDevisePost:
+      description: User Devise Created Successfully
+      content:
+        application/json:
+          schema:
+            allOf:
+            - $ref: '#/components/schemas/SaveUserDeviseSuccessResponse'
+    SuccessfulSaveUserFeedbackPost:
+      description: User Feedback Insert Successfully.
+      content:
+        application/json:
+          schema:
+            allOf:
+            - $ref: '#/components/schemas/SaveUserFeedbackSuccessResponse'
+    SuccessfulMosqueInfoPost:
+      description: Mosque Info Insert Successfully.
+      content:
+        application/json:
+          schema:
+            allOf:
+            - $ref: '#/components/schemas/MosqueInfoPostResponse'
+    SuccessfulMosqueInfoUpdate:
+      description: Mosque Info Update Successfully.
+      content:
+        application/json:
+          schema:
+            allOf:
+            - $ref: '#/components/schemas/MosqueInfoUpdateResponse'
+    SuccessfulMosquewidget:
+      description: Mosque Widget Successfully.
+      content:
+        application/json:
+          schema:
+            allOf:
+            - $ref: '#/components/schemas/Mosquewidget'
+    SuccessfulAppVersion:
+      description: App Version is found.
+      content:
+        application/json:
+          schema:
+            allOf:
+            - $ref: '#/components/schemas/AppVesionSuccessResponse'
+    SuccessfulCombineSearch:
+      description: mosque found.
+      content:
+        application/json:
+          schema:
+            allOf:
+            - $ref: '#/components/schemas/CombineSearchSuccessResponse'
+    SuccessfulNotes:
+      description: Notes found.
+      content:
+        application/json:
+          schema:
+            allOf:
+            - $ref: '#/components/schemas/NoteSuccessResponse'
+    SuccessfulAudios:
+      description: Audios found.
+      content:
+        application/json:
+          schema:
+            allOf:
+            - $ref: '#/components/schemas/AudiosSuccessResponse'
+    SuccessfulFavMosque:
+      description: Audios found.
+      content:
+        application/json:
+          schema:
+            allOf:
+            - $ref: '#/components/schemas/FavMosqueSuccessResponse'
+    SuccessfulBannerUrls:
+      description: Banner Urls found.
+      content:
+        application/json:
+          schema:
+            allOf:
+            - $ref: '#/components/schemas/BannerUrlsSuccessResponse'
+    SuccessfulInsertMosque:
+      description: Mosque Insert Successfull.
+      content:
+        application/json:
+          schema:
+            allOf:
+            - $ref: '#/components/schemas/InsertMosqueSuccessResponse'
+    SuccessfulUpdateMosqueTime:
+      description: Mosque Time Update Successfull.
+      content:
+        application/json:
+          schema:
+            allOf:
+            - $ref: '#/components/schemas/UpdateMosqueTimeSuccessResponse'
+    IssueReportingMosqueTime:
+      description: Mosque Time Update Successfull.
+      content:
+        application/json:
+          schema:
+            allOf:
+            - $ref: '#/components/schemas/IssueReportingSuccessResponse'
+    SuccessfulBoards:
+      description: Banner Urls found.
+      content:
+        application/json:
+          schema:
+            allOf:
+            - $ref: '#/components/schemas/BoardsSuccessResponse'
+    Forbidden:
+      description: User without privileges to perform this operation
+      content:
+        application/json:
+          schema:
+            allOf:
+            - $ref: '#/components/schemas/ResponseWithMessage'
+            - properties:
+                status:
+                  example: Error
+                message:
+                  example: User without privileges to perform this operation
+    NotFound:
+      description: Record not found
+      content:
+        application/json:
+          schema:
+            allOf:
+            - $ref: '#/components/schemas/ResponseWithMessage'
+            - properties:
+                status:
+                  example: Error
+                message:
+                  example: Record not found
+    NotLoggedIn:
+      description: Client is not logged in
+      content:
+        application/json:
+          schema:
+            allOf:
+            - $ref: '#/components/schemas/ResponseWithMessage'
+            - properties:
+                status:
+                  example: Error
+                message:
+                  example: You are not logged in. Please log in first
+    LoggedInError:
+      description: Client is not logged in
+      content:
+        application/json:
+          schema:
+            allOf:
+            - properties:
+                error:
+                  example: invalid_grant
+                error_description:
+                  example: Email, Password or access token Incorrect
+    BadRequest:
+      description: Something is wrong with the parameters or the request itself
+      content:
+        application/json:
+          schema:
+            allOf:
+            - $ref: '#/components/schemas/ResponseWithMessage'
+            - properties:
+                status:
+                  example: Error
+                message:
+                  example: Something is wrong with the parameters or the request itself
+    UnprocessableEntity:
+      description: The server could not process the entity due to some reason.
+      content:
+        application/json:
+          schema:
+            allOf:
+            - $ref: '#/components/schemas/ResponseWithMessage'
+            - properties:
+                status:
+                  example: Error
+                message:
+                  example: There is a problem with the request body you sent.
+    GatewayTimeout:
+      description: Gateway Timeout
+      content:
+        application/json:
+          schema:
+            allOf:
+            - $ref: '#/components/schemas/ResponseWithMessage'
+            - properties:
+                status:
+                  example: Error
+                message:
+                  example: Gateway Timeout
+    ClientNotLoggedIn:
+      description: User is not logged in
+      content:
+        application/json:
+          schema:
+            allOf:
+            - $ref: '#/components/schemas/ResponseWithMessage'
+            - properties:
+                status:
+                  example: Error
+                message:
+                  example: Email, password incorrect
+    OauthAuthorizeBody:
+      description: A JSON object for app authenticate
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              email:
+                $ref: '#/components/schemas/User/properties/email'
+              password:
+                type: string
+                example: '12345678'
+                description: Password of the user
+              grant_type:
+                type: string
+                example: password
+                description: response type for token authoriz
+              client_id:
+                type: string
+                example: 277ef29692f9a70d511415dc60592daf4cf2c6f6552d3e1b769924b2f2e2e6fe
+                description: client_id of app
+              client_secret:
+                type: string
+                example: 277ef29692f9a70d511415dc60592daf4cf2c6f6552d3e1b769924b2f2e2e6fe
+                description: client_secret of app
+    OauthTokenBody:
+      description: A JSON object for user token
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              email:
+                $ref: '#/components/schemas/User/properties/email'
+              client_id:
+                type: string
+                example: 277ef29692f9a70d511415dc60592daf4cf2c6f6552d3e1b769924b2f2e2e6fe
+                description: client_id of app
+              client_secret:
+                type: string
+                example: YBvfgYuFsvQovnv74ql-EWtBFkxwELX1PMMTNfhYGZQ
+                description: client_secret of app
+              redirect_uri:
+                type: string
+                example: urn:ietf:wg:oauth:2.0:oob
+                description: redirect_uri of app
+              code_verifier:
+                type: string
+                example: EjeLtclPXi6L1oZpc5lIsHYfXzLTGgewmY5B0BMKAuo
+                description: code_verifier for authoriz the app
+              grant_type:
+                type: string
+                example: authorization_code
+                description: grant_type of token (authorization_code or refresh_token)
+              code:
+                type: string
+                example: GxHhNn-lys01IhJUAD022elgdu_V7Pv0_cPg-WRoCx0
+                description: client_secret of app
+              refresh_token:
+                type: string
+                example: bjVrYICKfjaorIfaQLYQVYKCAXkEsACk0oXg
+                description: refresh token of user token
+    OauthRevokeBody:
+      description: A JSON object for user token
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              client_id:
+                type: string
+                example: 277ef29692f9a70d511415dc60592daf4cf2c6f6552d3e1b769924b2f2e2e6fe
+                description: client_id of app
+              client_secret:
+                type: string
+                example: d6106f26e8ff5b749a606a1fba557f44eb3dca8f48596847770beb9b643ea352
+                description: client_secret of app
+              token:
+                type: string
+                example: bjVrYICKfjaorIfaQLYQVYKCAXkEsACk0oXg
+                description: token of user
+    OauthBadRequestResponse:
+      description: Oauth Bad Request Response
+      content:
+        application/json:
+          schema:
+            allOf:
+            - $ref: '#/components/schemas/OauthBadRequest'
+    SuccessfulOauthAuthorize:
+      description: Access Token Created Successfully with client authoriz
+      content:
+        application/json:
+          schema:
+            allOf:
+            - $ref: '#/components/schemas/OauthAuthorize'
+    OauthUnauthorizedResponse:
+      description: Oauth Unauthorized Response
+      content:
+        application/json:
+          schema:
+            allOf:
+            - $ref: '#/components/schemas/OauthUnauthorized'
+    LogoutUnauthorizedResponse:
+      description: Oauth Unauthorized Response
+      content:
+        application/json:
+          schema:
+            allOf:
+            - $ref: '#/components/schemas/ResponseWithMessage'
+            - properties:
+                status:
+                  example: Error
+                message:
+                  example: You are not logged in. Please log in first
+    SuccessfulCountry:
+      description: Countries found.
+      content:
+        application/json:
+          schema:
+            allOf:
+            - $ref: '#/components/schemas/CountrySuccessResponse'
+    SuccessfulCity:
+      description: Cities found.
+      content:
+        application/json:
+          schema:
+            allOf:
+            - $ref: '#/components/schemas/CitySuccessResponse'
+    SuccessfulState:
+      description: Countries found.
+      content:
+        application/json:
+          schema:
+            allOf:
+            - $ref: '#/components/schemas/StateSuccessResponse'
+  requestBodies:
+    RegisterBody:
+      description: A JSON object with the initial User information
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              full_name:
+                $ref: '#/components/schemas/User/properties/full_name'
+              email:
+                $ref: '#/components/schemas/User/properties/email'
+              password:
+                type: string
+                example: abc@1234
+                description: The first user will have password, but the invited won't
+              password_confirmation:
+                type: string
+                example: abc@1234
+                description: The first user will have password, but the invited won't
+              country_code:
+                $ref: '#/components/schemas/User/properties/country_code'
+              phone:
+                $ref: '#/components/schemas/User/properties/phone'
+    LoginBody:
+      description: A JSON object for user authenticate
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              email:
+                $ref: '#/components/schemas/User/properties/email'
+              password:
+                type: string
+                example: "12345678"
+                description: The first user will have password, but the invited won't
+    OauthAuthorizeBody:
+      description: A JSON object for app authenticate
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              email:
+                $ref: '#/components/schemas/User/properties/email'
+              password:
+                type: string
+                example: "12345678"
+                description: Password of the user
+              grant_type:
+                type: string
+                example: password
+                description: response type for token authoriz
+              client_id:
+                type: string
+                example: 277ef29692f9a70d511415dc60592daf4cf2c6f6552d3e1b769924b2f2e2e6fe
+                description: client_id of app
+              client_secret:
+                type: string
+                example: d6106f26e8ff5b749a606a1fba557f44eb3dca8f48596847770beb9b643ea352
+                description: client_secret of app
+    OauthTokenBody:
+      description: A JSON object for user token
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              email:
+                $ref: '#/components/schemas/User/properties/email'
+              password:
+                type: string
+                example: "12345678"
+                description: Password of the user
+              grant_type:
+                type: string
+                example: password
+                description: response type for token authoriz
+              client_id:
+                type: string
+                example: 277ef29692f9a70d511415dc60592daf4cf2c6f6552d3e1b769924b2f2e2e6fe
+                description: client_id of app
+              client_secret:
+                type: string
+                example: d6106f26e8ff5b749a606a1fba557f44eb3dca8f48596847770beb9b643ea352
+                description: client_secret of app
+    OauthRevokeBody:
+      description: A JSON object for user token
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              client_id:
+                type: string
+                example: 277ef29692f9a70d511415dc60592daf4cf2c6f6552d3e1b769924b2f2e2e6fe
+                description: client_id of app
+              client_secret:
+                type: string
+                example: d6106f26e8ff5b749a606a1fba557f44eb3dca8f48596847770beb9b643ea352
+                description: client_secret of app
+              token:
+                type: string
+                example: bjVrYICKfjaorIfaQLYQVYKCAXkEsACk0oXg
+                description: token of user
+    CreateUser:
+      description: A JSON object for Create user token
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              client_id:
+                type: string
+                example: 277ef29692f9a70d511415dc60592daf4cf2c6f6552d3e1b769924b2f2e2e6fe
+                description: client_id of app
+              client_secret:
+                type: string
+                example: d6106f26e8ff5b749a606a1fba557f44eb3dca8f48596847770beb9b643ea352
+                description: client_secret of app
+              first_name:
+                type: string
+                example: Ronak
+                description: first_name of user
+              last_name:
+                type: string
+                example: Bhatt
+                description: last_name of user
+              email:
+                type: string
+                example: ronakabhattrz@gmail.com
+                description: email of user
+              password:
+                type: string
+                example: "12345678"
+                description: password of user
+              image_url:
+                type: string
+                example: https://static.thenounproject.com/png/961-200.png
+                description: Url for Image
+    UpdateUser:
+      description: A JSON object for Create user token
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              first_name:
+                type: string
+                example: Ronak
+                description: first_name of user
+              last_name:
+                type: string
+                example: Bhatt
+                description: last_name of user
+              image_url:
+                type: string
+                example: https://static.thenounproject.com/png/961-200.png
+                description: Url of Image
+  parameters:
+    offset:
+      in: query
+      name: offset
+      required: false
+      schema:
+        type: integer
+        default: 0
+        minimum: 0
+      description: The number of items to skip before starting to collect the result set.
+    limit:
+      in: query
+      name: limit
+      required: false
+      schema:
+        type: integer
+        minimum: 1
+        maximum: 100
+        default: 20
+      description: The number of items to return.
+    id:
+      name: id
+      in: path
+      description: Record ID
+      required: true
+      schema:
+        type: integer
+        minimum: 1
+    email:
+      name: email
+      in: query
+      description: Record search by email
+      schema:
+        type: string
+    password:
+     name: password
+     in: query
+     schema:
+       type: string
